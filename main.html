@@ -1,0 +1,144 @@
+<html lang="en">
+  <head>
+    <script type="importmap">
+      {
+        "imports": {
+          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+        }
+      }
+    </script>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase.js"></script>
+    <script src="js/firebase.js"></script>
+
+    <link rel="stylesheet" href="style.css" />
+    <title>SQSP Staging Site</title>
+  </head>
+
+  <body>
+    <div id="app" v-cloak>
+      <img class="sqsp-logo" src="resources/Squarespace_Logo.svg" alt="">
+      <login-form></login-form>
+    </div>
+    <script setup></script>
+    <script type="module">
+      import { createApp } from "vue";
+
+      let app = createApp({
+        data() {
+          return {
+            value: "My initial value",
+          };
+        },
+      });
+      app.component("login-form", {
+        template: `
+        <div class="login-bg"></div>
+        <div class="reg-box">
+        <form action="" ref="formReg" id="reg-form" @submit.prevent="onUpload">
+          <div class="upload-div">
+            <input type="file" name="file"
+            style="display:none;" 
+            id="upload-input" 
+            ref="fileInput" 
+            @change="onFilePicked"
+             webkitdirectory directory multiple
+            required/>
+            <img
+              @click="sumbitFile"
+              class="btns"
+              id="upload-btn"
+              src="resources/upload-btn.svg"
+              alt=""
+            />
+            <div class="upload-text">
+              <p class="title-font">{{titleOne}}</p>
+              <p class="sub-title-font">{{titleTwo}}</p>
+            </div>
+          </div>
+          <input
+            type="text"
+            placeholder="Project name"
+            id="project-name" v-model=projectName
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password*"
+            id="password" v-model=password
+            required
+          />
+          <input
+            type="password"
+            placeholder="Repeat password*"
+            id="confirm_password"
+            required
+          />
+          <button type="submit" class="btns" id="submit-btn">Submit</button>
+        </form>
+      </div>
+        `,
+        data() {
+          return {
+            titleOne: "Upload file*",
+            titleTwo: "or select a folder",
+            projectHolder: "Project name",
+            passwordHolder: "Repeat password*",
+            projectName: "",
+            password: "",
+            image: null,
+          };
+        },
+        methods: {
+          sumbitFile() {
+            console.log("clicked");
+            this.$refs.fileInput.click();
+          },
+          onFilePicked(event) {
+            console.log("changed");
+            const files = event.target.files;
+            let filename = files[0].name;
+            if (filename.lastIndexOf(".") <= 0) {
+              return alert("Please add a valid file!");
+            }
+            //read uploaded file name
+            const fileReader = new FileReader();
+            fileReader.addEventListener("load", () => {
+              this.imageUrl = fileReader.result;
+            });
+            fileReader.readAsDataURL(files[0]);
+            this.image = files[0];
+            console.log("this.image is " + this.image);
+          },
+          onUpload() {
+            console.log("upload");
+
+            var form = event.target;
+            var imageNum = form.file.files.length;
+            console.log(imageNum);
+            for (var i = 0; i < imageNum; i++) {
+              var file = form.file.files[i];
+              const storageRef = firebase.storage().ref("web/" + file.name);
+              storageRef.put(file).then((snapshot) => {
+              });
+            }
+            //clear form
+            var name = this.projectName;
+            var password = this.password;
+            var msgContent = this.image;
+
+            saveMessages(name, password, msgContent);
+            this.$refs.formReg.reset(); // This will clear that form
+
+            sendData();
+          },
+        },
+      });
+
+      app.mount("#app");
+    </script>
+  </body>
+</html>
