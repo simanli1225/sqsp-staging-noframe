@@ -1,0 +1,125 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase.js"></script>
+    <script src="js/firebase.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <title>SQSP Staging Site - Project</title>
+    <img class="sqsp-logo" src="resources/Squarespace_Logo.svg" alt="" />
+  </head>
+  <body>
+    <div id="projects-section"></div>
+    <div class="list-array">
+      <div id="project-list">
+        <p>ALL PROJECTS</p>
+        <hr class="menu-hr" />
+      </div>
+    </div>
+
+    <script>
+      var title = document.getElementById("title");
+      var title2 = document.getElementById("title2");
+      var projectList = document.getElementById("project-list");
+
+      //   var name;
+      //get the project names from the data base
+
+      dataRef.on("value", function (snapshot) {
+        console.log("snapshot is");
+        console.log(snapshot);
+
+        snapshot.forEach(function (childSnapshot) {
+          var childData = childSnapshot.val();
+          console.log("childData is");
+          //-----get the project name
+          var infos = childData.info;
+          console.log(infos);
+          var key = Object.keys(infos)[0];
+
+          console.log("key is" + key);
+
+          //when using variable, or 函数，have to use 中括号
+          const name = infos[key].name;
+
+          console.log("nameEvent is" + name);
+          //print name on the list
+          const para = document.createElement("p");
+          para.innerHTML = name;
+          //   drawImages(name);
+          projectList.appendChild(para);
+          console.log("name1 is" + name);
+
+          //-----get the project images and display pictures
+          var imagesList = childData.images;
+          console.log("imagesList is");
+
+          console.log(imagesList);
+          const projectDisplay = document.createElement("div");
+          projectDisplay.className = "project-display";
+          document
+            .getElementById("projects-section")
+            .appendChild(projectDisplay);
+
+          //draw the grey title
+          const smallTitle=document.createElement("p");
+          smallTitle.className="project-text-grey";
+          smallTitle.innerHTML = "Project";
+
+          projectDisplay.appendChild(smallTitle);
+
+          //draw the title
+          const nameTitle = document.createElement("p");
+          nameTitle.className="project-title-text";
+          nameTitle.innerHTML = name;
+          projectDisplay.appendChild(nameTitle);
+
+          //draw the line
+
+          const projectLine=document.createElement("hr");
+          projectLine.className="project-title-line";
+          projectDisplay.appendChild(projectLine);
+
+          Object.keys(imagesList).forEach((item) => {
+            console.log(item);
+            var imageName = imagesList[item].images;
+            if (imageName.lastIndexOf(".") <= 0) {
+              return;
+            } else {
+              console.log(imageName);
+              drawImages(imageName, name, projectDisplay);
+            }
+          });
+        });
+      });
+      function drawImages(imageName, name, projectDisplay) {
+        //get the project pics from the stroage
+        const storageRef = firebase.storage().ref();
+        console.log(storageRef);
+
+        var tangRef = storageRef.child(name + "/" + imageName);
+        console.log(name + "/" + imageName);
+
+        // First we sign in the user anonymously
+
+        // Once the sign in completed, we get the download URL of the image
+        tangRef
+          .getDownloadURL()
+          .then(function (url) {
+            // Once we have the download URL, we set it to our img element
+            const pic = document.createElement("img");
+            pic.src = url;
+            projectDisplay.appendChild(pic);
+            //   console.log(url);
+          })
+          .catch(function (error) {
+            // If anything goes wrong while getting the download URL, log the error
+            console.error(error);
+          });
+
+        //   console.log(tangRef.getDownloadURL());
+      }
+    </script>
+  </body>
+</html>

@@ -16,7 +16,6 @@ const app = firebase.initializeApp(firebaseConfig);
 
 //-------for the images------//
 // var contactFormDB = firebase.database().ref("contactForm");
-var contactFormDB = firebase.database().ref("testFolder");
 
 // Get a reference to the storage service, which is used to create references in your storage bucket
 // const storage = getStorage(app);
@@ -26,20 +25,44 @@ var storage = firebase.storage();
 var database = firebase.database();
 
 // const databaseReference = dbRef(database, "files");
-const databaseReference = firebase.database().ref("files");
+// const databaseReference = firebase.database().ref("files");
+var dataRef = firebase.database().ref("testFolder/");
 
-const saveMessages = (name, password, msgContent) => {
-  var newContactForm = contactFormDB.push();
+
+
+const saveMessages = (name, password) => {
+  var dataRef = firebase.database().ref("testFolder/"+name+"/info");
+  var newContactForm = dataRef.push();
   newContactForm.set({
     name: name,
     password: password,
-    msgContent: msgContent,
   });
 };
+const saveImageNames = (image,name) => {
+  var dataRef = firebase.database().ref("testFolder/"+name+"/images");
+  var newContactForm = dataRef.push();
+  newContactForm.set({
+    images: image,
+  });
+};
+// const saveMessages = (name, password) => {
+//   var dataRef = firebase.database().ref("testFolder/");
+//   var newContactForm = dataRef.push();
+//   newContactForm.set({
+//     name: name,
+//     password: password,
+//   });
+// };
+// const saveImageNames = (image,name) => {
+//   var dataRef2 = firebase.database().ref("testFolder/"+name);
+//   var newContactForm = dataRef2.push();
+//   newContactForm.set({
+//     images: image,
+//   });
+// };
 
-function sendData() {
-  const getElementVal = (id) => {
-    return document.getElementById(id).value;
-  };
-}
-
+// function sendData() {
+//   const getElementVal = (id) => {
+//     return document.getElementById(id).value;
+//   };
+// }

@@ -1,74 +1,54 @@
 <html lang="en">
   <head>
-    <script type="importmap">
-      {
-        "imports": {
-          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
-        }
-      }
-    </script>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/vue@3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/7.14.1-0/firebase.js"></script>
     <script src="js/firebase.js"></script>
-
     <link rel="stylesheet" href="style.css" />
     <title>SQSP Staging Site</title>
   </head>
 
   <body>
-    <div id="app" v-cloak>
-      <img class="sqsp-logo" src="resources/Squarespace_Logo.svg" alt="">
-      <login-form></login-form>
-    </div>
-    <script setup></script>
-    <script type="module">
-      import { createApp } from "vue";
-
-      let app = createApp({
-        data() {
-          return {
-            value: "My initial value",
-          };
-        },
-      });
-      app.component("login-form", {
-        template: `
-        <div class="login-bg"></div>
-        <div class="reg-box">
-        <form action="" ref="formReg" id="reg-form" @submit.prevent="onUpload">
+    <div id="app">
+      <img class="sqsp-logo" src="resources/Squarespace_Logo.svg" alt="" />
+      <div class="login-bg"></div>
+      <div class="reg-box">
+        <form action="" ref="formReg" id="reg-form">
           <div class="upload-div">
-            <input type="file" name="file"
-            style="display:none;" 
-            id="upload-input" 
-            ref="fileInput" 
-            @change="onFilePicked"
-             webkitdirectory directory multiple
-            required/>
+            <input
+              type="file"
+              name="file"
+              style="display: none"
+              id="upload-input"
+              ref="fileInput"
+              webkitdirectory
+              directory
+              multiple
+              required
+            />
             <img
-              @click="sumbitFile"
               class="btns"
               id="upload-btn"
               src="resources/upload-btn.svg"
               alt=""
             />
-            <div class="upload-text">
-              <p class="title-font">{{titleOne}}</p>
-              <p class="sub-title-font">{{titleTwo}}</p>
+            <div class="upload-text" id="upload-des">
+              <p class="title-font">Upload files</p>
+              <p class="sub-title-font">or select a folder</p>
+              <p id="chosen-image-text"></p>
             </div>
           </div>
           <input
             type="text"
             placeholder="Project name"
-            id="project-name" v-model=projectName
+            id="project-name"
             required
           />
           <input
             type="password"
             placeholder="Password*"
-            id="password" v-model=password
+            id="password"
             required
           />
           <input
@@ -80,65 +60,110 @@
           <button type="submit" class="btns" id="submit-btn">Submit</button>
         </form>
       </div>
-        `,
-        data() {
-          return {
-            titleOne: "Upload file*",
-            titleTwo: "or select a folder",
-            projectHolder: "Project name",
-            passwordHolder: "Repeat password*",
-            projectName: "",
-            password: "",
-            image: null,
-          };
-        },
-        methods: {
-          sumbitFile() {
-            console.log("clicked");
-            this.$refs.fileInput.click();
-          },
-          onFilePicked(event) {
-            console.log("changed");
-            const files = event.target.files;
-            let filename = files[0].name;
-            if (filename.lastIndexOf(".") <= 0) {
-              return alert("Please add a valid file!");
-            }
-            //read uploaded file name
-            const fileReader = new FileReader();
-            fileReader.addEventListener("load", () => {
-              this.imageUrl = fileReader.result;
-            });
-            fileReader.readAsDataURL(files[0]);
-            this.image = files[0];
-            console.log("this.image is " + this.image);
-          },
-          onUpload() {
-            console.log("upload");
+      <div id="progress-div"></div>
+    </div>
+    <script>
+      var fileBtn = document.getElementById("upload-btn");
+      var fileInput = document.getElementById("upload-input");
+      var regForm = document.getElementById("reg-form");
 
-            var form = event.target;
-            var imageNum = form.file.files.length;
-            console.log(imageNum);
-            for (var i = 0; i < imageNum; i++) {
-              var file = form.file.files[i];
-              const storageRef = firebase.storage().ref("web/" + file.name);
-              storageRef.put(file).then((snapshot) => {
-              });
-            }
-            //clear form
-            var name = this.projectName;
-            var password = this.password;
-            var msgContent = this.image;
-
-            saveMessages(name, password, msgContent);
-            this.$refs.formReg.reset(); // This will clear that form
-
-            sendData();
-          },
-        },
+      //upload button
+      fileBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        console.log("clicked");
+        fileInput.click();
       });
+      //on file upload
+      document
+        .getElementById("upload-input")
+        .addEventListener("change", onFilePicked, false);
 
-      app.mount("#app");
+      function onFilePicked() {
+        console.log("changed");
+      
+        const files = this.files;
+        console.log("how many chosen"+this.files.length);
+        document.getElementById("chosen-image-text").innerHTML="*"+this.files.length+" images are chosen";
+      }
+      //submit form
+      regForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        //form input
+        let name = document.getElementById("project-name").value;
+        let password = document.getElementById("password").value;
+        let passwordCom = document.getElementById("confirm_password").value;
+        console.log("upload");
+        let msgContent = "";
+
+        console.log(password);
+        console.log(passwordCom);
+        //check if passsword matches
+        if (password == passwordCom) {
+          //if password matches
+          console.log("password matches");
+          var form = event.target;
+
+          var imageNum = fileInput.files.length;
+          console.log("imageNum is" + imageNum);
+
+          for (var i = 0; i < imageNum; i++) {
+            var file = fileInput.files[i];
+            console.log("file is");
+            console.log(file);
+            // const storageRef = firebase.storage().ref("web/" +name+"/"+ file.name);
+            const storageRef = firebase.storage().ref(name + "/" + file.name);
+            saveImageNames(file.name, name);
+
+            //store the image to storage
+            var uploadTask = storageRef.put(file);
+
+            // storageRef.put(file).then((snapshot) => {
+            //   console.log(storageRef.getDownloadURL());
+            // });
+
+            var sucessUpload = 0;
+            //add a progress bar here
+            var uploadProgress = document.createElement("p");
+            uploadProgress.className = "progress-text";
+            document.getElementById("progress-div").appendChild(uploadProgress);
+            uploadTask.on(
+              "state_changed",
+              (snapshot) => {
+                // Observe state change events such as progress, pause, and resume
+                // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                const progress =
+                  (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log("Upload is " + progress + "% done");
+                switch (snapshot.state) {
+                  case "paused":
+                    console.log("Upload is paused");
+                    break;
+                  case "running":
+                    console.log("Upload is running");
+                    break;
+                }
+              },
+              (error) => {
+                // Handle unsuccessful uploads
+              },
+              () => {
+                console.log("Upload is done??");
+                sucessUpload++;
+                uploadProgress.innerText =
+                  "Uploaded " + sucessUpload + "/" + imageNum;
+                if (sucessUpload == imageNum) {
+                  console.log("all images uploaded");
+                  saveMessages(name, password);
+                  regForm.reset(); // This will clear that form
+                  window.location.href = "display.html"; //jump to project page
+                }
+              }
+            );
+          }
+        } else {
+          alert("Password didn't match!");
+        }
+      });
     </script>
   </body>
 </html>
